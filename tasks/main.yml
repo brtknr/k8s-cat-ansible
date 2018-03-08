@@ -1,0 +1,35 @@
+---
+- name: download inception files
+  get_url:
+    url: |
+      https://raw.githubusercontent.com/markgoddard/magnum-tools/master/k8s-demo/{{ item }}
+    dest: "{{ kube_config_dir }}/{{ item }}"
+  with_items: "{{ inception_files }}"
+  become: yes
+
+- name: update ip address
+  replace:
+    path: "{{ kube_config_dir }}/{{ item }}"
+    regexp: "10.254.143.3"
+    replace: "{{ service_ip }}"
+  with_items: "{{ inception_files }}"
+  become: yes
+
+- name: apply kubectl service to create inception service
+  command: |
+    /opt/bin/kubectl apply -f {{ kube_config_dir }}/{{ item }}
+  with_items: "{{ inception_files }}"
+
+- name: download jupyter files
+  get_url:
+    url: |
+      https://raw.githubusercontent.com/brtknr/k8s-tensorflow-notebook/master/{{ item }}
+    dest: "{{ kube_config_dir }}/{{ item }}"
+  with_items: "{{ tf_nb_files }}"
+  become: yes
+
+- name: apply kubectl service to create notebook service
+  command: |
+    /opt/bin/kubectl apply -f {{ kube_config_dir }}/{{ item }}
+  with_items: "{{ tf_nb_files }}"
+...

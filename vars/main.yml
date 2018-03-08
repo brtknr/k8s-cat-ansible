@@ -1,0 +1,9 @@
+---
+inception_files:
+  - inception-deployment.yml
+  - inception-service.yml
+  - inception-client-job.yml
+tf_nb_files:
+  - k8s-tf-nb-deployment.yml
+  - k8s-tf-nb-service.yml
+...
