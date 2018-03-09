@@ -17,7 +17,7 @@
 
 - name: apply kubectl service to create inception service
   command: |
-    kubectl apply -f {{ kube_config_dir }}/{{ item }}
+    {{bin_dir}}/kubectl apply -f {{ kube_config_dir }}/{{ item }}
   with_items: "{{ inception_files }}"
 
 - name: download jupyter files
@@ -30,6 +30,14 @@
 
 - name: apply kubectl service to create notebook service
   command: |
-    kubectl apply -f {{ kube_config_dir }}/{{ item }}
+    {{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/{{ item }}
   with_items: "{{ tf_nb_files }}"
+
+- name: get notebook address
+  shell: |
+    {{ bin_dir }}/kubectl logs -l run=tf-app | grep "http://localhost:8888/?token=" | cut -d= -f2
+  register: notebook_token
+
+- name: print notebook token
+  debug: msg="{{ notebook_token.stdout }}"
 ...
