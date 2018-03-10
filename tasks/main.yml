@@ -17,7 +17,7 @@
 
 - name: apply kubectl service to create inception service
   command: |
-    kubectl apply -f {{ kube_config_dir }}/{{ item }}
+    {{bin_dir}}/kubectl apply -f {{ kube_config_dir }}/{{ item }}
   with_items: "{{ inception_files }}"
 
 - name: download jupyter files
@@ -30,6 +30,58 @@
 
 - name: apply kubectl service to create notebook service
   command: |
-    kubectl apply -f {{ kube_config_dir }}/{{ item }}
+    {{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/{{ item }}
   with_items: "{{ tf_nb_files }}"
+
+- name: wait for inception service to start on port 30000
+  wait_for: port=30000
+
+- name: wait for notebook server to start on port 31000
+  wait_for: port=31000
+
+- name: get notebook pod name
+  shell: |
+    {{ bin_dir }}/kubectl get pods | grep tf-app | cut -d' ' -f1
+  register: pod_name
+
+- name: get notebook token 
+  shell: |
+    {{ bin_dir }}/kubectl logs {{ pod_name.stdout_lines[0] }} | grep "http://localhost:8888/?token=" | cut -d= -f2
+  register: notebook_token
+
+- name: print notebook token
+  debug: msg="{{ notebook_token.stdout_lines[0] }}"
+
+- name: copy admin-user file
+  copy:
+    src: admin-user.yml
+    dest: "{{ kube_config_dir }}/admin-user.yml"
+
+- name: apply admin user role
+  command: |
+    {{ bin_dir }}/kubectl apply -f {{ kube_config_dir }}/admin-user.yml
+
+- name: get admin-user token
+  shell: |
+    echo $({{ bin_dir }}/kubectl -n kube-system describe secret $({{ bin_dir }}/kubectl -n kube-system get secrets | grep admin-user | cut -f1 -d ' ') | grep -E '^token' | cut -f2 -d':' | tr -d '\t\n\r ')
+  register: admin_user_token
+
+- name: print admin-user token
+  debug: msg="{{ admin_user_token.stdout_lines[0] }}"
+
+- name: create config file
+  shell: |
+    {{ bin_dir }}/kubectl config --kubeconfig=config set-cluster internal --server=https://10.233.0.1:443 --insecure-skip-tls-verify &&
+    {{ bin_dir }}/kubectl config --kubeconfig=config set-credentials admin-user --token="{{ admin_user_token.stdout_lines[0] }}" &&
+    {{ bin_dir }}/kubectl config --kubeconfig=config set-context internal --cluster=internal --namespace=default --user=admin-user &&
+    {{ bin_dir }}/kubectl config --kubeconfig=config set-context external --cluster=internal --namespace=default --user=admin-user &&
+    {{ bin_dir }}/kubectl config --kubeconfig=config use-context internal
+
+- name: copy config to notebook
+  command: |
+    {{ bin_dir }}/kubectl cp config {{ pod_name.stdout_lines[0] }}:/notebooks/config.yml
+
+- name: pip install kubernetes inside the pod
+  command: |
+    {{ bin_dir }}/kubectl exec {{ pod_name.stdout_lines[0] }} -- pip install kubernetes
 ...
