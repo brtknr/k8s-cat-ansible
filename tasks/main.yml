@@ -26,7 +26,7 @@
       https://raw.githubusercontent.com/brtknr/k8s-tensorflow-notebook/master/{{ item }}
     dest: "{{ kube_config_dir }}/{{ item }}"
   with_items: "{{ tf_nb_files }}"
-  become: yes
+
 
 - name: apply kubectl service to create notebook service
   command: |
@@ -77,11 +77,26 @@
     {{ bin_dir }}/kubectl config --kubeconfig=config set-context external --cluster=internal --namespace=default --user=admin-user &&
     {{ bin_dir }}/kubectl config --kubeconfig=config use-context internal
 
-- name: copy config to notebook
+- name: copy config to notebook container
   command: |
     {{ bin_dir }}/kubectl cp config {{ pod_name.stdout_lines[0] }}:/notebooks/config.yml
 
 - name: pip install kubernetes inside the pod
   command: |
     {{ bin_dir }}/kubectl exec {{ pod_name.stdout_lines[0] }} -- pip install kubernetes
+
+- name: copy inception files to notebook container 
+  command: |
+    {{bin_dir}}/kubectl cp {{ kube_config_dir }}/{{ item }} {{ pod_name.stdout_lines[0] }}:/notebooks/{{ item }}
+  with_items: "{{ inception_files }}"
+
+- name: download jupyter notebook
+  get_url:
+    url: |
+      https://raw.githubusercontent.com/brtknr/k8s-tensorflow-notebook/master/k8s-inception-demo.ipynb
+    dest: "{{ kube_config_dir }}/k8s-inception-demo.ipynb"
+
+- name: copy jupyter notebook to notebook container 
+  command: |
+    {{bin_dir}}/kubectl cp {{ kube_config_dir }}/k8s-inception-demo.ipynb {{ pod_name.stdout_lines[0] }}:/notebooks/k8s-inception-demo.ipynb
 ...
