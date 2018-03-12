@@ -93,8 +93,9 @@
 - name: download jupyter notebook
   get_url:
     url: |
-      https://raw.githubusercontent.com/brtknr/k8s-tensorflow-notebook/master/k8s-inception-demo.ipynb
+      https://raw.githubusercontent.com/brtknr/k8s-tensorflow-notebook/master/demo/k8s-inception-demo.ipynb
     dest: "{{ kube_config_dir }}/k8s-inception-demo.ipynb"
+    force: yes
 
 - name: copy jupyter notebook to notebook container 
   command: |
