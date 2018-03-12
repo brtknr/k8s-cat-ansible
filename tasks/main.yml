@@ -23,7 +23,7 @@
 - name: download jupyter files
   get_url:
     url: |
-      https://raw.githubusercontent.com/brtknr/k8s-tensorflow-notebook/master/{{ item }}
+      https://raw.githubusercontent.com/brtknr/k8s-tensorflow-notebook/master/demo/{{ item }}
     dest: "{{ kube_config_dir }}/{{ item }}"
   with_items: "{{ tf_nb_files }}"
   become: yes
