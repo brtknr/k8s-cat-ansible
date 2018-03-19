@@ -1,0 +1,21 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tf-app
+spec:
+  selector:
+    matchLabels:
+      run: tf-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: tf-app
+    spec:
+      containers:
+      - name: tf-app
+        image: tensorflow/tensorflow
+        ports:
+        - containerPort: 8888
+...

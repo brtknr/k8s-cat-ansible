@@ -3,9 +3,8 @@
   get_url:
     url: |
       https://raw.githubusercontent.com/markgoddard/magnum-tools/master/k8s-demo/{{ item }}
-    dest: "{{ kube_config_dir }}/{{ item }}"
+    dest: "{{ kube_config_dir }}/"
   with_items: "{{ inception_files }}"
-  become: yes
 
 - name: update ip address
   replace:
@@ -13,18 +12,16 @@
     regexp: "10.254.143.3"
     replace: "{{ service_ip }}"
   with_items: "{{ inception_files }}"
-  become: yes
 
 - name: apply kubectl service to create inception service
   command: |
     {{bin_dir}}/kubectl apply -f {{ kube_config_dir }}/{{ item }}
   with_items: "{{ inception_files }}"
 
-- name: download jupyter files
-  get_url:
-    url: |
-      https://raw.githubusercontent.com/brtknr/k8s-tensorflow-notebook/master/demo/{{ item }}
-    dest: "{{ kube_config_dir }}/{{ item }}"
+- name: copy over jupyter notebook server config files
+  copy:    
+    src: "{{ item }}"
+    dest: "{{ kube_config_dir }}/"
   with_items: "{{ tf_nb_files }}"
 
 
@@ -55,7 +52,7 @@
 - name: copy admin-user file
   copy:
     src: admin-user.yml
-    dest: "{{ kube_config_dir }}/admin-user.yml"
+    dest: "{{ kube_config_dir }}/"
 
 - name: apply admin user role
   command: |
@@ -90,12 +87,10 @@
     {{bin_dir}}/kubectl cp {{ kube_config_dir }}/{{ item }} {{ pod_name.stdout_lines[0] }}:/notebooks/{{ item }}
   with_items: "{{ inception_files }}"
 
-- name: download jupyter notebook
-  get_url:
-    url: |
-      https://raw.githubusercontent.com/brtknr/k8s-tensorflow-notebook/master/demo/k8s-inception-demo.ipynb
-    dest: "{{ kube_config_dir }}/k8s-inception-demo.ipynb"
-    force: yes
+- name: copy over jupyter notebook
+  copy:
+    src: k8s-inception-demo.ipynb
+    dest: "{{ kube_config_dir }}/"
 
 - name: copy jupyter notebook to notebook container 
   command: |
