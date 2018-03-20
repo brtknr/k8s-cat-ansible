@@ -5,9 +5,9 @@
     master_ip: "{{ hostvars[groups['kube-master'][1]]['ip'] }}"
   tasks:
   - name: Kill existing forwards
-    shell: ps aux | grep ssh | grep localhost:31000 | awk \'{print $2}\' | sudo xargs --no-run-if-empty kill -9 
+    shell: "ps aux | grep -v grep | grep 8888:localhost:31000 | awk '{print $2}' | sudo xargs --no-run-if-empty kill -9"
   - name: Forward SSH port
-    shell: "ssh -fNT -L*:8888:localhost:31000 {{ master_user }}@{{ master_ip }}"
+    shell: "ssh -o StrictHostKeyChecking=no -fNT -L*:8888:localhost:31000 {{ master_user }}@{{ master_ip }}"
 
 - hosts: kube-master[1]
   roles:
