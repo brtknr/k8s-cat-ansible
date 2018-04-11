@@ -19,12 +19,15 @@
     {{kubectl_bin_dir}}/kubectl apply -f {{ kube_config_dir }}/{{ item }}
   with_items: "{{ inception_files }}"
 
-- name: copy over jupyter notebook server config files
+- name: copy over jupyter notebook deployment config
   copy:    
-    src: "{{ item }}"
+    src: k8s-tf-nb-deployment.yml 
     dest: "{{ kube_config_dir }}/"
-  with_items: "{{ tf_nb_files }}"
 
+- name: copy over jupyter notebook service config
+  template:    
+    src: k8s-tf-nb-service.yml.j2
+    dest: "{{ kube_config_dir }}/k8s-tf-nb-service.yml"
 
 - name: apply kubectl service to create notebook service
   command: |
