@@ -4,7 +4,8 @@ This ansible role deploys a jupyter notebook that interfaces with a tensorflow
 server using a tensorflow client to classify images of cats from
 http://thecatapi.com.
 
-The script to deploy tensorflow serving containers were derived from this
+
+The script to deploy tensorflow serving containers are derived from this
 [repository](https://github.com/markgoddard/magnum-tools/tree/master/k8s-demo).
 
 This role was originally conceived as a component of this
