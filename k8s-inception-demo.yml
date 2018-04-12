@@ -1,4 +1,15 @@
 ---
+- hosts: localhost
+  vars:
+    node_ip: "{{ hostvars[groups['kube-node'][0]]['ansible_host'] }}"
+    gateway_ip: "{{ hostvars['gateway']['ansible_host'] }}"
+  tasks:
+  - name: Kill existing forwards
+    shell: "ps aux | grep -v grep | grep 8888:{{ node_ip }}:31000 | awk '{print $2}' | xargs --no-run-if-empty kill -9"
+    ignore_errors: yes
+  - name: Forward SSH port
+    shell: "ssh -o StrictHostKeyChecking=no -fNT -L*:8888:{{ node_ip }}:31000 {{ gateway_ip }}"
+
 - hosts: kube-master[0]
   roles:
   - k8s-inception-ansible

@@ -35,10 +35,14 @@
   with_items: "{{ tf_nb_files }}"
 
 - name: wait for inception service to start on port 30000
-  wait_for: host=port=30000
+  wait_for:
+    host: "{{ hostvars[groups['kube-node'][0]]['ansible_host'] }}"
+    port: 30000
 
 - name: wait for notebook server to start on port 31000
-  wait_for: port=31000
+  wait_for:
+    host: "{{ hostvars[groups['kube-node'][0]]['ansible_host'] }}"
+    port: 31000
 
 - name: copy admin-user file
   copy:
@@ -95,5 +99,5 @@
   register: notebook_token
 
 - name: print notebook token
-  debug: msg="http://{{ hostvars['gateway']['ansible_host']}}:8888/?token={{ notebook_token.stdout_lines[0] }}"
+  debug: msg="http://localhost:8888/?token={{ notebook_token.stdout_lines[0] }}"
 ...
