@@ -35,7 +35,7 @@
   with_items: "{{ tf_nb_files }}"
 
 - name: wait for inception service to start on port 30000
-  wait_for: port=30000
+  wait_for: host=port=30000
 
 - name: wait for notebook server to start on port 31000
   wait_for: port=31000

@@ -10,4 +10,4 @@ After the notebook is deployed, a hyperlink to the notebook will be shown on the
 
 Usage:
 
-	ansible-playbook -i hosts.ini k8s-inception-demo.yml -b	
+	ansible-playbook -i hosts.ini k8s-inception-demo.yml

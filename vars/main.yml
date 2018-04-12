@@ -1,7 +1,7 @@
 ---
-server_ip: 10.233.0.1
-service_ip: 10.233.0.143
-nb_service_ip: 10.233.0.145
+server_ip: 10.254.0.1
+service_ip: 10.254.0.143
+nb_service_ip: 10.254.0.145
 kube_config_dir: /etc/kubernetes
 kubectl_bin_dir: "{{ bin_dir | default('/usr/local/bin') }}"
 inception_files:
