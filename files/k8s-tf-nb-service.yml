@@ -6,7 +6,6 @@ metadata:
   labels:
     run: tf-app
 spec:
-  clusterIP: {{ nb_service_ip }}
   type: NodePort
   ports:
   - port: 8888
