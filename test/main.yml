@@ -1,0 +1,6 @@
+---
+- hosts: kube-api
+  gather_facts: false
+  roles:
+    - ansible-k8s-inception
+...

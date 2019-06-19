@@ -1,14 +1,10 @@
 ---
-server_ip: 10.254.0.1
-service_ip: 10.254.0.143
-nb_service_ip: 10.254.0.145
 kube_config_dir: /etc/kubernetes
-kubectl_bin_dir: "{{ bin_dir | default('/usr/local/bin') }}"
 inception_files:
   - inception-deployment.yml
   - inception-service.yml
   - inception-client-job.yml
-tf_nb_files:
   - k8s-tf-nb-deployment.yml
   - k8s-tf-nb-service.yml
+  - k8s-tf-nb-rbac.yml
 ...

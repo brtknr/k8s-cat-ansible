@@ -1,103 +1,41 @@
 ---
-
-- name: download inception files
-  get_url:
-    url: |
-      https://raw.githubusercontent.com/markgoddard/magnum-tools/master/k8s-demo/{{ item }}
-    dest: "{{ kube_config_dir }}/"
-  with_items: "{{ inception_files }}"
-
-- name: update ip address
-  replace:
-    path: "{{ kube_config_dir }}/{{ item }}"
-    regexp: "10.254.143.3"
-    replace: "{{ service_ip }}"
-  with_items: "{{ inception_files }}"
-
-- name: apply kubectl service to create inception service
+- name: apply kubectl service to create inception and notebook service
   command: |
-    {{kubectl_bin_dir}}/kubectl apply -f {{ kube_config_dir }}/{{ item }}
+    kubectl apply -f {{ role_path }}/files/{{ item }}
   with_items: "{{ inception_files }}"
-
-- name: copy over jupyter notebook deployment config
-  copy:    
-    src: k8s-tf-nb-deployment.yml 
-    dest: "{{ kube_config_dir }}/"
-
-- name: copy over jupyter notebook service config
-  template:    
-    src: k8s-tf-nb-service.yml.j2
-    dest: "{{ kube_config_dir }}/k8s-tf-nb-service.yml"
-
-- name: apply kubectl service to create notebook service
-  command: |
-    {{ kubectl_bin_dir }}/kubectl apply -f {{ kube_config_dir }}/{{ item }}
-  with_items: "{{ tf_nb_files }}"
-
-- name: wait for inception service to start on port 30000
-  wait_for:
-    host: "{{ hostvars[groups['kube-node'][0]]['ansible_host'] }}"
-    port: 30000
-
-- name: wait for notebook server to start on port 31000
-  wait_for:
-    host: "{{ hostvars[groups['kube-node'][0]]['ansible_host'] }}"
-    port: 31000
-
-- name: copy admin-user file
-  copy:
-    src: admin-user.yml
-    dest: "{{ kube_config_dir }}/"
-
-- name: apply admin user role
-  command: |
-    {{ kubectl_bin_dir }}/kubectl apply -f {{ kube_config_dir }}/admin-user.yml
-
-- name: get admin-user token
-  shell: |
-    echo $({{ kubectl_bin_dir }}/kubectl -n kube-system describe secret $({{ kubectl_bin_dir }}/kubectl -n kube-system get secrets | grep admin-user | cut -f1 -d ' ') | grep -E '^token' | cut -f2 -d':' | tr -d '\t\n\r ')
-  register: admin_user_token
-
-- name: create config file
-  shell: |
-    {{ kubectl_bin_dir }}/kubectl config --kubeconfig=config set-cluster internal --server=https://{{ server_ip }}:443 --insecure-skip-tls-verify &&
-    {{ kubectl_bin_dir }}/kubectl config --kubeconfig=config set-credentials admin-user --token="{{ admin_user_token.stdout_lines[0] }}" &&
-    {{ kubectl_bin_dir }}/kubectl config --kubeconfig=config set-context internal --cluster=internal --namespace=default --user=admin-user &&
-    {{ kubectl_bin_dir }}/kubectl config --kubeconfig=config set-context external --cluster=internal --namespace=default --user=admin-user &&
-    {{ kubectl_bin_dir }}/kubectl config --kubeconfig=config use-context internal
+  register: result
+  changed_when: '"configured" in result.stdout or "created" in result.stdout'
 
 - name: get notebook pod name
-  shell: |
-    {{ kubectl_bin_dir }}/kubectl get pods | grep tf-app | cut -d' ' -f1
-  register: pod_name
-
-- name: copy config to notebook container
   command: |
-    {{ kubectl_bin_dir }}/kubectl cp config {{ pod_name.stdout_lines[0] }}:/notebooks/config.yml
+    kubectl get pods -l run=tf-app -o custom-columns=:metadata.name --no-headers=true
+  register: result
+  changed_when: false
 
-- name: pip install kubernetes inside the pod
+- name: set fact about pod name
+  set_fact:
+    pod_name: "{{ result.stdout_lines[-1] }}"
+
+- name: pip install kubernetes and pillow inside the pod
   command: |
-    {{ kubectl_bin_dir }}/kubectl exec {{ pod_name.stdout_lines[0] }} -- pip install kubernetes
+    kubectl exec {{ pod_name }} -- pip install kubernetes pillow
+  register: result
+  changed_when: '"Installing" in result.stdout'
 
-- name: copy inception files to notebook container 
+- name: copy files to notebook container 
   command: |
-    {{kubectl_bin_dir}}/kubectl cp {{ kube_config_dir }}/{{ item }} {{ pod_name.stdout_lines[0] }}:/notebooks/{{ item }}
-  with_items: "{{ inception_files }}"
-
-- name: copy over jupyter notebook
-  copy:
-    src: k8s-inception-demo.ipynb
-    dest: "{{ kube_config_dir }}/"
-
-- name: copy jupyter notebook to notebook container 
-  command: |
-    {{kubectl_bin_dir}}/kubectl cp {{ kube_config_dir }}/k8s-inception-demo.ipynb {{ pod_name.stdout_lines[0] }}:/notebooks/k8s-inception-demo.ipynb
+    kubectl cp {{ role_path}}/files/{{ item }} {{ pod_name }}:/tf/{{ item }}
+  with_items:
+    - k8s-inception-demo.ipynb
+    - inception-client-job.yml
+  changed_when: false
 
 - name: get notebook token 
   shell: |
-    {{ kubectl_bin_dir }}/kubectl logs {{ pod_name.stdout_lines[0] }} | grep "http://localhost:8888/?token=" | cut -d= -f2
+    kubectl logs {{ pod_name }} | grep "token="
   register: notebook_token
+  changed_when: false
 
 - name: print notebook token
-  debug: msg="http://localhost:8888/?token={{ notebook_token.stdout_lines[0] }}"
+  debug: msg="{{ notebook_token.stdout_lines[-1] }}"
 ...
