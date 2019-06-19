@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: nb-account
+  name: default
   namespace: default
 ---
 kind: ClusterRole
@@ -27,5 +27,5 @@ roleRef:
   name: nb-role
 subjects:
 - kind: ServiceAccount
-  name: nb-account
+  name: default
   namespace: default

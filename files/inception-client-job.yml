@@ -1,13 +1,13 @@
 ---
-apiVersion: batch/v1                                                                                                                  
-kind: Job                                                                                                                             
-metadata:                                                                                                                             
-  name: inception-client                                                                                                              
-spec:                                                                                                                                 
-  template:                                                                                                                           
-    metadata:                                                                                                                         
-      name: inception-client                                                                                                          
-    spec:                                                                                                                             
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: inception-client
+spec:
+  template:
+    metadata:
+      name: inception-client
+    spec:
       containers:
       - name: inception-client
         image: katacoda/tensorflow_serving

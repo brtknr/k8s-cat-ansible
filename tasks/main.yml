@@ -22,7 +22,7 @@
   register: result
   changed_when: '"Installing" in result.stdout'
 
-- name: copy files to notebook container 
+- name: copy files to notebook container
   command: |
     kubectl cp {{ role_path}}/files/{{ item }} {{ pod_name }}:/tf/{{ item }}
   with_items:
@@ -30,7 +30,7 @@
     - inception-client-job.yml
   changed_when: false
 
-- name: get notebook token 
+- name: get notebook token
   shell: |
     kubectl logs {{ pod_name }} | grep "token="
   register: notebook_token
