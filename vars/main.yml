@@ -1,4 +1,5 @@
 ---
+inception_default_address_type: InternalIP
 inception_files:
   - inception-deployment.yml
   - inception-service.yml

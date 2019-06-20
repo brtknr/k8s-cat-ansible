@@ -32,10 +32,23 @@
 
 - name: get notebook token
   shell: |
-    kubectl logs {{ pod_name }} | grep "token="
+    kubectl logs {{ pod_name }} | grep "token=" | tail -n1 | cut -f2 -d"="
   register: notebook_token
   changed_when: false
 
+- name: get node ips
+  command: |
+    kubectl get nodes -o jsonpath='{ $.items[*].status.addresses[?(@.type=="{{ inception_default_address_type }}")].address }'
+  changed_when: false
+  register: node_ips
+
+- name: get service nodeport
+  command: |
+    kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services tf-app
+  changed_when: false
+  register: nodeport
+
 - name: print notebook token
-  debug: msg="{{ notebook_token.stdout_lines[-1] }}"
+  debug: msg="http://{{ item }}:{{ nodeport.stdout }}?token={{ notebook_token.stdout }}."
+  with_items: "{{ node_ips.stdout.split() }}"
 ...

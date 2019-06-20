@@ -13,7 +13,7 @@ spec:
       labels:
         run: tf-app
     spec:
-      serviceAccountName: default
+      serviceAccountName: nb-account
       containers:
       - name: tf-app
         image: tensorflow/tensorflow:latest-jupyter
