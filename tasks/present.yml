@@ -54,6 +54,6 @@
   register: nodeport
 
 - name: print notebook token
-  debug: msg="http://{{ item }}:{{ nodeport.stdout }}?token={{ notebook_token.stdout }}."
+  debug: msg="http://{{ item }}:{{ nodeport.stdout }}/notebooks/k8s-inception-demo.ipynb?token={{ notebook_token.stdout }}"
   with_items: "{{ node_ips.stdout.split() }}"
 ...
