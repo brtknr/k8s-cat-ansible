@@ -8,4 +8,5 @@ inception_files:
   - k8s-tf-nb-deployment.yml
   - k8s-tf-nb-service.yml
   - k8s-tf-nb-rbac.yml
+  - k8s-tf-nb-ingress.yml
 ...
