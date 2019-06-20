@@ -4,7 +4,6 @@ inception_default_address_type: InternalIP # options: InternalIP, ExternalIP
 inception_files:
   - inception-deployment.yml
   - inception-service.yml
-  - inception-client-job.yml
   - k8s-tf-nb-deployment.yml
   - k8s-tf-nb-service.yml
   - k8s-tf-nb-rbac.yml
