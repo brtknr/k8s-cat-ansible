@@ -1,0 +1,8 @@
+---
+- name: delete previously installed kubernetes manifests
+  command: | 
+    kubectl delete -f {{ role_path }}/files/{{ item }} --ignore-not-found
+  with_items: "{{ inception_files }}"
+  register: result
+  changed_when: '"deleted" in result.stdout'
+...

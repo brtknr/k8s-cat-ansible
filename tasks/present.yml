@@ -1,0 +1,59 @@
+---
+- name: apply kubectl service to create inception and notebook service
+  command: |
+    kubectl apply -f {{ role_path }}/files/{{ item }}
+  with_items: "{{ inception_files }}"
+  register: result
+  changed_when: '"configured" in result.stdout or "created" in result.stdout'
+
+- name: wait for deployment to complete
+  command: |
+    kubectl wait --for=condition=available --timeout=600s deployment/tf-app
+  changed_when: false
+
+- name: get notebook pod name
+  command: |
+    kubectl get pods -l run=tf-app -o custom-columns=:metadata.name --no-headers=true --field-selector=status.phase=Running
+  register: result
+  changed_when: false
+
+- name: set fact about pod name
+  set_fact:
+    pod_name: "{{ result.stdout_lines[-1] }}"
+
+- name: pip install kubernetes and pillow inside the pod
+  command: |
+    kubectl exec {{ pod_name }} -- pip install kubernetes pillow
+  register: result
+  changed_when: '"Installing" in result.stdout'
+
+- name: copy files to notebook container
+  command: |
+    kubectl cp {{ role_path}}/files/{{ item }} {{ pod_name }}:/tf/{{ item }}
+  with_items:
+    - k8s-inception-demo.ipynb
+    - inception-client-job.yml
+  changed_when: false
+
+- name: get notebook token
+  shell: |
+    kubectl logs {{ pod_name }} | grep http://.\*token\= | tail -n1 | cut -f2 -d"="
+  register: notebook_token
+  changed_when: false
+
+- name: get node ips
+  command: |
+    kubectl get nodes -o jsonpath='{ $.items[*].status.addresses[?(@.type=="{{ inception_default_address_type }}")].address }'
+  changed_when: false
+  register: node_ips
+
+- name: get service nodeport
+  command: |
+    kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services tf-app
+  changed_when: false
+  register: nodeport
+
+- name: print notebook token
+  debug: msg="http://{{ item }}:{{ nodeport.stdout }}?token={{ notebook_token.stdout }}."
+  with_items: "{{ node_ips.stdout.split() }}"
+...
