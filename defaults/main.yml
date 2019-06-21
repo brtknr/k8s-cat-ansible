@@ -1,2 +1,0 @@
-service_ip: 10.233.0.143
-kube_config_dir: /etc/kubernetes

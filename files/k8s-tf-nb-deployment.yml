@@ -13,9 +13,10 @@ spec:
       labels:
         run: tf-app
     spec:
+      serviceAccountName: nb-account
       containers:
       - name: tf-app
-        image: tensorflow/tensorflow
+        image: tensorflow/tensorflow:latest-jupyter
         ports:
         - containerPort: 8888
 ...
